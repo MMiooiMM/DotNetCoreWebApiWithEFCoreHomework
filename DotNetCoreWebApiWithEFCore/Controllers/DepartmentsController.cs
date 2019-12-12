@@ -52,22 +52,22 @@ namespace DotNetCoreWebApiWithEFCore.Controllers
                 return BadRequest();
             }
 
-            _context.Entry(department).State = EntityState.Modified;
-
-            try
+            var oldDepartment = await _context.Department.FindAsync(id);
+            if (oldDepartment == null)
             {
-                await _context.SaveChangesAsync();
+                return NotFound();
             }
-            catch (DbUpdateConcurrencyException)
+
+            var rowversion = (await _context.Department
+                .FromSqlInterpolated(
+                    $"EXEC [dbo].[Department_Update] {id}, {department.Name}, {department.Budget}, {department.StartDate}, {department.InstructorId}, {oldDepartment.RowVersion};")
+                .Select(x => x.RowVersion)
+                .ToListAsync())
+                .First();
+
+            if (rowversion == null)
             {
-                if (!DepartmentExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                return NotFound();
             }
 
             return NoContent();
@@ -79,10 +79,17 @@ namespace DotNetCoreWebApiWithEFCore.Controllers
         [HttpPost]
         public async Task<ActionResult<Department>> PostDepartment(Department department)
         {
-            _context.Department.Add(department);
+            var result = (await _context.Department
+                .FromSqlInterpolated(
+                    $"EXEC [dbo].[Department_Insert] {department.Name}, {department.Budget}, {department.StartDate}, {department.InstructorId};")
+                .Select(x => x.DepartmentId)
+                .ToListAsync())
+                .First();
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetDepartment", new { id = department.DepartmentId }, department);
+            department.DepartmentId = result;
+
+            return CreatedAtAction("GetDepartment", new { id = result }, department);
         }
 
         // DELETE: api/Departments/5
@@ -95,7 +102,8 @@ namespace DotNetCoreWebApiWithEFCore.Controllers
                 return NotFound();
             }
 
-            _context.Department.Remove(department);
+            await _context.Database.ExecuteSqlInterpolatedAsync(
+                $"EXEC [dbo].[Department_Delete] {department.DepartmentId}, {department.RowVersion};");
             await _context.SaveChangesAsync();
 
             return department;
