@@ -19,6 +19,7 @@ namespace DotNetCoreWebApiWithEFCore.Models
         public byte[] RowVersion { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime DeletedAt { get; set; }
+        public DateTime DateModified { get; set; }
 
         public virtual Person Instructor { get; set; }
         public virtual ICollection<Course> Course { get; set; }
