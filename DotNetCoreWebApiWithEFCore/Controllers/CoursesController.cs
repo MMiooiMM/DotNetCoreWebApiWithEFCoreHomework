@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
+using DotNetCoreWebApiWithEFCore.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using DotNetCoreWebApiWithEFCore.Models;
 
 namespace DotNetCoreWebApiWithEFCore.Controllers
 {
@@ -24,14 +22,14 @@ namespace DotNetCoreWebApiWithEFCore.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Course>>> GetCourse()
         {
-            return await _context.Course.ToListAsync();
+            return await _context.Course.Where(x => !x.IsDeleted).ToListAsync();
         }
 
         // GET: api/Courses/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Course>> GetCourse(int id)
         {
-            var course = await _context.Course.FindAsync(id);
+            var course = await _context.Course.Where(x => !x.IsDeleted).FirstOrDefaultAsync(x => x.CourseId == id);
 
             if (course == null)
             {
@@ -95,7 +93,8 @@ namespace DotNetCoreWebApiWithEFCore.Controllers
                 return NotFound();
             }
 
-            _context.Course.Remove(course);
+            course.IsDeleted = true;
+
             await _context.SaveChangesAsync();
 
             return course;
@@ -106,7 +105,7 @@ namespace DotNetCoreWebApiWithEFCore.Controllers
         public async Task<ActionResult<IEnumerable<VwCourseStudents>>> GetvwCourseStudents()
             => await _context.VwCourseStudents.ToListAsync();
 
-        // GET: api/Courses/vw/CourseStudentCount 
+        // GET: api/Courses/vw/CourseStudentCount
         [HttpGet("vw/CourseStudentCount")]
         public async Task<ActionResult<IEnumerable<VwCourseStudentCount>>> GetvwCourseStudentCount()
             => await _context.VwCourseStudentCount.ToListAsync();

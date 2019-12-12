@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
+using DotNetCoreWebApiWithEFCore.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using DotNetCoreWebApiWithEFCore.Models;
 
 namespace DotNetCoreWebApiWithEFCore.Controllers
 {
@@ -24,14 +22,14 @@ namespace DotNetCoreWebApiWithEFCore.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Person>>> GetPerson()
         {
-            return await _context.Person.ToListAsync();
+            return await _context.Person.Where(x => !x.IsDeleted).ToListAsync();
         }
 
         // GET: api/People/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Person>> GetPerson(int id)
         {
-            var person = await _context.Person.FindAsync(id);
+            var person = await _context.Person.Where(x => !x.IsDeleted).FirstOrDefaultAsync(x => x.Id == id);
 
             if (person == null)
             {
@@ -95,7 +93,8 @@ namespace DotNetCoreWebApiWithEFCore.Controllers
                 return NotFound();
             }
 
-            _context.Person.Remove(person);
+            person.IsDeleted = true;
+
             await _context.SaveChangesAsync();
 
             return person;

@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
+using DotNetCoreWebApiWithEFCore.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using DotNetCoreWebApiWithEFCore.Models;
 
 namespace DotNetCoreWebApiWithEFCore.Controllers
 {
@@ -24,14 +22,14 @@ namespace DotNetCoreWebApiWithEFCore.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Department>>> GetDepartment()
         {
-            return await _context.Department.ToListAsync();
+            return await _context.Department.Where(x => !x.IsDeleted).ToListAsync();
         }
 
         // GET: api/Departments/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Department>> GetDepartment(int id)
         {
-            var department = await _context.Department.FindAsync(id);
+            var department = await _context.Department.Where(x => !x.IsDeleted).FirstOrDefaultAsync(x => x.DepartmentId == id);
 
             if (department == null)
             {
@@ -102,14 +100,14 @@ namespace DotNetCoreWebApiWithEFCore.Controllers
                 return NotFound();
             }
 
-            await _context.Database.ExecuteSqlInterpolatedAsync(
-                $"EXEC [dbo].[Department_Delete] {department.DepartmentId}, {department.RowVersion};");
+            department.IsDeleted = true;
+
             await _context.SaveChangesAsync();
 
             return department;
         }
 
-        // GET: api/Departments/vw/DepartmentCourseCount 
+        // GET: api/Departments/vw/DepartmentCourseCount
         [HttpGet("vw/DepartmentCourseCount")]
         public async Task<ActionResult<IEnumerable<VwDepartmentCourseCount>>> GetvwDepartmentCourseCount()
             => await _context.VwDepartmentCourseCount.FromSqlRaw("SELECT * FROM vwDepartmentCourseCount").ToListAsync();
