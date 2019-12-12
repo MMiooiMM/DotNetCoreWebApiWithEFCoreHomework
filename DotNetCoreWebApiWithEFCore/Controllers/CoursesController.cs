@@ -101,6 +101,16 @@ namespace DotNetCoreWebApiWithEFCore.Controllers
             return course;
         }
 
+        // GET: api/Courses/vw/CourseStudents
+        [HttpGet("vw/CourseStudents")]
+        public async Task<ActionResult<IEnumerable<VwCourseStudents>>> GetvwCourseStudents()
+            => await _context.VwCourseStudents.ToListAsync();
+
+        // GET: api/Courses/vw/CourseStudentCount 
+        [HttpGet("vw/CourseStudentCount")]
+        public async Task<ActionResult<IEnumerable<VwCourseStudentCount>>> GetvwCourseStudentCount()
+            => await _context.VwCourseStudentCount.ToListAsync();
+
         private bool CourseExists(int id)
         {
             return _context.Course.Any(e => e.CourseId == id);
