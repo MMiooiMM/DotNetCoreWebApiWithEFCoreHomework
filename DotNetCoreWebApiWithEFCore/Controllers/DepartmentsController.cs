@@ -109,6 +109,11 @@ namespace DotNetCoreWebApiWithEFCore.Controllers
             return department;
         }
 
+        // GET: api/Departments/vw/DepartmentCourseCount 
+        [HttpGet("vw/DepartmentCourseCount")]
+        public async Task<ActionResult<IEnumerable<VwDepartmentCourseCount>>> GetvwDepartmentCourseCount()
+            => await _context.VwDepartmentCourseCount.FromSqlRaw("SELECT * FROM vwDepartmentCourseCount").ToListAsync();
+
         private bool DepartmentExists(int id)
         {
             return _context.Department.Any(e => e.DepartmentId == id);
